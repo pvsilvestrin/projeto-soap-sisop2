@@ -7,6 +7,7 @@ class ProcessDescriptor
 {
     private int PID;
     private int PC;
+    private int memoryPart;
     private int[] reg;
     public int getPID() { return PID; }
     public int getPC() { return PC; }
@@ -19,5 +20,14 @@ class ProcessDescriptor
         PID = pid;
         PC = 0;
         reg = new int[16];
+        memoryPart = 0;
+    }
+
+    public int getMemoryPart() {
+        return memoryPart;
+    }
+
+    public void setMemoryPart(int memoryPart) {
+        this.memoryPart = memoryPart;
     }
 }

@@ -15,13 +15,11 @@ public class ConsoleListener  implements ActionListener
 
     private IntController hint;
     private String l;
-    public void setInterruptController(IntController i)
-    {
+    public void setInterruptController(IntController i) {
         hint = i;
     }
 
-    public void actionPerformed(ActionEvent e)
-    {
+    public void actionPerformed(ActionEvent e) {
         l = e.getActionCommand();
         JTextField line = (JTextField)e.getSource();
         line.setText("");

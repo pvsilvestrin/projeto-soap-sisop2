@@ -57,56 +57,56 @@ class Disk extends Thread
 
 
             // Processor requested: now I have something to do...
-            for (int i=0; i < 20; ++i)
-            {
-                // sleep just 50 ms which is one disc turn here
-                try {sleep(50);} catch (InterruptedException e){}
-                System.err.println("disk made a turn");
+            //for (int i=0; i < 20; ++i)
+            //{
+            // sleep just 50 ms which is one disc turn here
+            try {sleep(50);} catch (InterruptedException e){}
+            System.err.println("disk made a turn");
 
-                if (address < 0 || address >= diskSize)
-                    errorCode = ERRORCODE_ADDRESS_OUT_OF_RANGE;
-                else {
-                    errorCode = ERRORCODE_SUCCESS;
+            if (address < 0 || address >= diskSize)
+                errorCode = ERRORCODE_ADDRESS_OUT_OF_RANGE;
+            else {
+                errorCode = ERRORCODE_SUCCESS;
 
-                    switch(operation) {
-                        case OPERATION_READ:
-                            System.err.println("OPERATION_READ");
-                            readSize = 1;
-                            readData[0] = diskImage[address];
-                            break;
-                        case OPERATION_WRITE:
-                            System.err.println("OPERATION_WRITE");
-                            diskImage[address] = writeData;
-                            break;
-                        case OPERATION_LOAD:
-                            System.err.println("OPERATION_LOAD");
-                            int diskIndex = address;
-                            int bufferIndex = 0;
-                            while (diskImage[diskIndex] != END_OF_FILE)
-                            {
-                                System.err.println(".");
-                                readData[bufferIndex] = diskImage[diskIndex];
-                                ++diskIndex;
-                                ++bufferIndex;
-                                if (bufferIndex >= BUFFER_SIZE || diskIndex >= diskSize)
-                                {
-                                    errorCode = ERRORCODE_MISSING_EOF;
-                                    break;
-                                }
+                switch(operation) {
+                    case OPERATION_READ:
+                        System.err.println("OPERATION_READ");
+                        readSize = 1;
+                        readData[0] = diskImage[address];
+                        break;
+                    case OPERATION_WRITE:
+                        System.err.println("OPERATION_WRITE");
+                        diskImage[address] = writeData;
+                        break;
+                    case OPERATION_LOAD:
+                        System.err.println("OPERATION_LOAD");
+                        int diskIndex = address;
+                        int bufferIndex = 0;
+                        while (diskImage[diskIndex] != END_OF_FILE) {
+                            System.err.println(".");
+                            readData[bufferIndex] = diskImage[diskIndex];
+                            mem.write(Memory.MMU_DISK_1, bufferIndex, diskImage[diskIndex]);
+                            ++diskIndex;
+                            ++bufferIndex;
+                            if (bufferIndex >= BUFFER_SIZE || diskIndex >= diskSize) {
+                                errorCode = ERRORCODE_MISSING_EOF;
+                                break;
                             }
-                            readSize = bufferIndex;
-                            break;
-                    }
+                        }
+                        readSize = bufferIndex;
+                        break;
                 }
-
-                //hint.P();
-                hint.set(5);
             }
+
+            //hint.P();
+            hint.set(5);
+            //}
         }
 
     }
 
-    public synchronized void roda()    {
+    public synchronized void roda(int address)    {
+        this.address = address;
         notify();
     }
 
@@ -134,5 +134,13 @@ class Disk extends Thread
             System.out.println("Parsed "+bytes[0]+" "+bytes[1]+" "
                     +bytes[2]+" "+bytes[3]+" = "+diskImage[i]);
         }
+    }
+
+    public void setOperation(int operation) {
+        this.operation = operation;
+    }
+
+    public void setAddress(int address) {
+        this.address = address;
     }
 }

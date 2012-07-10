@@ -35,17 +35,21 @@ public class GraphicsSurface extends JComponent {
     }
 
     public synchronized void changeProcess(int pId){
-        //try {wait();} catch (InterruptedException e) {e.printStackTrace();}
-
         Process process = processMap.get(pId);
         if(process == null){
             process = createNewProcess(pId);
             processMap.put(pId, process);
         }
         procUsage.add(new Process(process));
-
-        //notify();
     }
+
+    public synchronized void addProcessIdle(int pid){
+        Process process = new ProcessIdle(pid);
+        procUsage.add(process);
+        processMap.put(pid, process);
+    }
+
+
 
     private Process createNewProcess(int pid){
         Process process = new Process(pid);
@@ -67,7 +71,7 @@ public class GraphicsSurface extends JComponent {
         barPossition = 15;
         for(Integer i : processIds){
             g2d.setColor(processMap.get(i).color);
-           g2d.drawString("Process" + i, INITIAL_X, barPossition);
+           g2d.drawString(processMap.get(i).getName(), INITIAL_X, barPossition);
             barPossition = barPossition + 20;
         }
 
@@ -114,6 +118,24 @@ public class GraphicsSurface extends JComponent {
 
         public int getpId() {
             return pId;
+        }
+
+        public String getName(){
+            return "Process " + pId;
+        }
+    }
+
+    private class ProcessIdle extends Process {
+        private ProcessIdle(int pId) {
+            super(pId);
+        }
+
+        private ProcessIdle(Process process) {
+            super(process);
+        }
+
+        public String getName(){
+            return "ProcessIdle";
         }
     }
 

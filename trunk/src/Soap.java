@@ -26,7 +26,7 @@ public class Soap {
         ConsoleListener c = mw.getListener();
         c.setInterruptController(i);
 
-        Memory m	= new Memory(1024);
+        Memory m	= new Memory(i,1024);
         Timer t	= new Timer(i);
         Disk d	= new Disk(i,m, DISC_SIZE, "disk.txt");
         Processor p	= new Processor(i,m,c,t,d, graphicsSurface);
