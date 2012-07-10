@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * User: paulo
  * Date: 6/18/12
@@ -12,10 +15,12 @@ class Kernel
     private Timer timer;
     private Disk disc;
     private Processor processor;
+
     private int running = 0;
     private ProcessList readyList;
     private ProcessList diskList;
     private ProcessDescriptor idle;
+    private Map<Integer, FileDescriptor> fileTable;
     private GraphicsSurface graphicsSurface;
     private static int processIdControl = 100;
     private static final int BLOCK_FREE = 0;
@@ -33,6 +38,7 @@ class Kernel
         processor = p;
         this.graphicsSurface = graphicsSurface;
         memoryBlockControl = new int[8];
+        initMemoryBlockControl();
 
         readyList = new ProcessList ();
         diskList = new ProcessList ();
@@ -42,12 +48,7 @@ class Kernel
         idle.setPC(0);
         graphicsSurface.addProcessIdle(idle.getPID());
 
-        //readyList.pushBack(new ProcessDescriptor(456));
-        //readyList.getBack().setPC(0);
-        //readyList.getBack().setMemoryPart(2);
-        //readyList.pushBack( new ProcessDescriptor(457) );
-        //readyList.getBack().setPC(0);
-        //readyList.getBack().setMemoryPart(1);
+        fileTable = new HashMap<Integer, FileDescriptor>();
     }
     // Each time the kernel runs it have access to all hardware components
     public void run(int hardwareInterrupNumber)
@@ -66,7 +67,6 @@ class Kernel
                 if(!readyList.isEmpty()) {
                     aux = readyList.popFront();
                     readyList.pushBack(aux);
-                    graphicsSurface.changeProcess(readyList.getFront().getPID());
                     System.err.println("CPU runs: "+readyList.getFront().getPID());
                 }
                 break;
@@ -74,6 +74,10 @@ class Kernel
                 if(!diskList.isEmpty()) {
                     aux = diskList.popFront();
                     readyList.pushBack(aux);
+                    if(disc.getReadSize() == 1) {
+                        aux.getReg()[0] = disc.getReadData();
+                        aux.getReg()[1] = 0;
+                    }
                 }
                 break;
             case 3:
@@ -83,17 +87,28 @@ class Kernel
             case 15: // HW INT console
                 handleConsoleInput(console.getLine());
                 System.err.println("Operator typed " + console.getLine());
-
-                //readyList.pushBack(new ProcessDescriptor(getProcessId()));
-                //readyList.getBack().setPC(0);
-                //readyList.getBack().setMemoryPart(1);
+                break;
+            case 34: //OPEN FILE
+                handleOpenFile();
+                break;
+            case 35: //CLOSE FILE
+                handleCloseFile();
                 break;
             case 36: // GET SW INT
                 aux = readyList.popFront();
                 diskList.pushBack(aux);
-                disc.roda(0);
+                FileDescriptor fileDescriptor = fileTable.get(aux.getReg()[0]);
+                disc.setOperation(disc.OPERATION_READ);
+                disc.roda(fileDescriptor.getAddress());
+                fileDescriptor.incAddress();
                 break;
 
+            case 37: //PUT SW INT
+                aux = readyList.popFront();
+                diskList.pushBack(aux);
+                disc.setOperation(disc.OPERATION_WRITE);
+                disc.roda(0);
+                break;
             case 32:
                 System.err.println("Process Exit");
                 handleProcessExit();
@@ -110,12 +125,30 @@ class Kernel
             processor.setPC(readyList.getFront().getPC());
             processor.setReg(readyList.getFront().getReg());
             memory.setBaseRegister(Memory.MMU_PROCESSOR_1,readyList.getFront().getMemoryPart());
+            graphicsSurface.changeProcess(readyList.getFront().getPID());
         } else { //Init process Idle
             processor.setPC(idle.getPC());
             processor.setReg(idle.getReg());
             memory.setBaseRegister(Memory.MMU_PROCESSOR_1, idle.getMemoryPart());
             graphicsSurface.changeProcess(idle.getPID());
         }
+    }
+
+    private void handleCloseFile() {
+        ProcessDescriptor aux = readyList.getFront();
+        fileTable.remove(aux.getReg()[0]);
+    }
+
+    private void handleOpenFile() {
+        ProcessDescriptor aux = readyList.getFront();
+        //create file descriptor
+        FileDescriptor fileDescriptor = new FileDescriptor(aux.getReg()[1],aux.getReg()[2],aux.getReg()[0]);
+        int fileNumber = FileDescriptor.getFileDescriptorNumber();
+        //add in file table
+        fileTable.put(fileNumber, fileDescriptor);
+        //set return values
+        aux.getReg()[0] = fileNumber;
+        aux.getReg()[1] = 0; //success
     }
 
     private void handleProcessExit() {
@@ -184,4 +217,6 @@ class Kernel
         memoryBlockControl[6] = BLOCK_FREE;
         memoryBlockControl[7] = BLOCK_FREE;
     }
+
+
 }

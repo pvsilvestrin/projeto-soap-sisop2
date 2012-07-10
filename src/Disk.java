@@ -24,7 +24,7 @@ class Disk extends Thread
     private int operation;
     private int errorCode;
     // and some codes to get the meaning of the intterface
-    // you can use the codes inside the kernel, like: dis.OPERATION_READ
+    // you can use the codes inside the kernel, like: disk.OPERATION_READ
     public final int OPERATION_READ = 0;
     public final int OPERATION_WRITE = 1;
     public final int OPERATION_LOAD = 2;
@@ -60,7 +60,7 @@ class Disk extends Thread
             //for (int i=0; i < 20; ++i)
             //{
             // sleep just 50 ms which is one disc turn here
-            try {sleep(50);} catch (InterruptedException e){}
+            try {sleep(100);} catch (InterruptedException e){}
             System.err.println("disk made a turn");
 
             if (address < 0 || address >= diskSize)
@@ -142,5 +142,13 @@ class Disk extends Thread
 
     public void setAddress(int address) {
         this.address = address;
+    }
+
+    public int getReadData(){
+        return readData[0];
+    }
+
+    public int getReadSize() {
+        return readSize;
     }
 }

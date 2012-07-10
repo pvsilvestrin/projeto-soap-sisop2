@@ -135,7 +135,7 @@ public class GraphicsSurface extends JComponent {
         }
 
         public String getName(){
-            return "ProcessIdle";
+            return "Process Idle";
         }
     }
 
