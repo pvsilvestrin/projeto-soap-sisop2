@@ -33,9 +33,7 @@ class IntController
 
     public synchronized void set(int n)	{
         try {
-            System.out.println("Esperando");
             wait();
-            System.out.println("Foi");
             number = n;
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -46,7 +44,7 @@ class IntController
     public synchronized int get() {
         int ret = number;
         number = 0;
-        notify();
+        //notify();
         return ret;
     }
 

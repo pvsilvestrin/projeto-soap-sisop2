@@ -8,6 +8,7 @@ class Processor extends Thread
 {
     private IntController hint;
     private Memory mem;
+    private int mmuProcessor = Memory.MMU_PROCESSOR_1;
     private ConsoleListener con;
     private Timer tim;
     private Disk dis;
@@ -55,7 +56,8 @@ class Processor extends Thread
             catch (InterruptedException e){}
 
             // read from memory in the address indicated by PC
-            int RD = mem.read(PC);
+            int RD = mem.read(mmuProcessor,PC);
+            if(RD == -1) kernel.run(3);
             // break the 32bit word into 4 separate bytes
             IR[0] = RD>>>24;
             IR[1] = (RD>>>16) & 255;
@@ -66,11 +68,12 @@ class Processor extends Thread
             System.err.print("processor: PC="+PC);
             System.err.print(" IR="+IR[0]+" "+IR[1]+" "+IR[2]+" "+IR[3]);
 
-            executeBasicInstructions();
+
             // advance PC to next instruction
             graphicsSurface.addProcessTick();
             ++PC;
             // Check for Hardware Interrupt and if so call the kernel
+            executeBasicInstructions();
 
             interruptNumber = hint.get();
             if (interruptNumber != 0) {
@@ -83,13 +86,14 @@ class Processor extends Thread
             } else {
                 hint.readyToNext();
             }
+
         }
     }
 
     public void executeBasicInstructions() {
         if ((IR[0]=='L') && (IR[1]=='M'))  {
             System.err.println(" [L M r m] ");
-            reg[IR[2]] = mem.read(IR[3]);
+            reg[IR[2]] = mem.read(mmuProcessor,IR[3]);
         }
         else if ((IR[0]=='L') && (IR[1]=='C')) {
             System.err.println(" [L C r c] ");
@@ -97,7 +101,7 @@ class Processor extends Thread
         }
         else if ((IR[0]=='W') && (IR[1]=='M')) {
             System.err.println(" [W M r m] ");
-            mem.write(IR[3],reg[IR[2]]);
+            mem.write(mmuProcessor,IR[3],reg[IR[2]]);
         }
         else if ((IR[0]=='S') && (IR[1]=='U'))  {
             System.err.println(" [S U r1 r2] ");

@@ -41,4 +41,8 @@ class ProcessList
         return processList.get(processList.size()-1);
     }
 
+    public boolean isEmpty(){
+        return processList.isEmpty();
+    }
+
 }
